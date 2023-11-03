@@ -6,7 +6,7 @@ WORKDIR /app
 COPY ["Pipfile", "Pipfile.lock", "./"]
 
 RUN pipenv install --system --deploy
-COPY ["predict.py", "model_eta=0.1_max_depth=3_v2.53.bin", "./"]
+COPY ["predict.py", "model_eta=0.1_max_depth=3_v2.48.bin", "./"]
 
 EXPOSE 9696
 

@@ -38,7 +38,7 @@ df['weight_above_average'] = (df.weight > df.weight.mean()).astype(int)
 
 df_full_train, df_test = train_test_split(df, test_size=0.2, random_state=1)
 
-columns = ['height','sex','weight']
+columns = ['height', 'weight', 'density', 'bmi', 'diameter', 'length', 'sex']
 
 y_full_train = df_full_train.age.values
 y_test = df_test.age.values
