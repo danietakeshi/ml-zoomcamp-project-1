@@ -19,9 +19,11 @@ def predict():
 	dX = xgb.DMatrix(X, feature_names=features)
 	y_pred = model.predict(dX)
 	age = y_pred.round(1)
+	harvest_flag = age >= 11.0
 
 	result = {
-		'crab_age': float(age)
+		'crab_age': float(age),
+		'harvest': bool(harvest_flag)
 	}
 
 	return jsonify(result)

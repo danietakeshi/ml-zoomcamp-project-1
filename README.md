@@ -18,6 +18,8 @@ The primary goal of this machine learning prediction problem is to develop a pre
 
 3. Maximizing the profit for crab farming businesses by timing the harvest appropriately.
 
+The raw data can be downloaded at: [Crab Data](https://github.com/danietakeshi/ml-zoomcamp-project-1/blob/main/data/CrabAgePrediction.csv)
+
 The original dataset has the below information:
 - **sex**: Gender of the Crab - Male, Female and Indeterminate.
 - **length**: Length of the Crab (in Feet; 1 foot = 30.48 cms)
@@ -155,3 +157,24 @@ The final model was exported to a python file ([train](./code/train.py)), the co
 13. Saving the Model:
    - The trained model, along with the `DictVectorizer` object and feature names, is saved to a binary file with a filename that includes hyperparameter values and the RMSE score.
 
+## Flask API
+
+The code ([predict](./code/predict.py)) sets up a Flask web service for predicting the age of crabs and determining whether they are ready for harvest. It uses a pre-trained XGBoost regression model loaded from a binary file.
+
+1. **Loading Pre-trained Model:**
+   - The code loads a pre-trained XGBoost model, a `DictVectorizer`, and feature names from a binary file.
+
+2. **Flask Application Setup:**
+   - It creates a Flask application named 'churn' for handling HTTP requests.
+
+3. **Prediction Endpoint ('/predict'):**
+   - The `/predict` route is defined to receive POST requests with crab information.
+
+4. **Making Predictions:**
+   - The code transforms the received crab data, prepares it for XGBoost, and uses the model to predict the crab's age. It also determines if the crab is ready for harvest based on the predicted age.
+
+5. **JSON Response:**
+   - A JSON response is generated, containing the predicted crab age and a 'harvest' flag.
+
+6. **Server Startup:**
+   - The Flask application is started with debugging enabled, listening on all available network interfaces at port 9696.
