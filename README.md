@@ -178,3 +178,92 @@ The code ([predict](./code/predict.py)) sets up a Flask web service for predicti
 
 6. **Server Startup:**
    - The Flask application is started with debugging enabled, listening on all available network interfaces at port 9696.
+
+## Environment Management
+
+The [code](./code/) folder has the Pipfile and the Pipfile.lock containing all the project dependencies, run the command below to install the necessary libraries
+```bash 
+pipenv install
+```
+To use the activate the environment run the command `pipenv shell`
+
+## Docker
+
+The [Dockerfile](./code/Dockerfile) is used to containerize a Python application that serves predictions for crab age and harvest readiness using Flask and Gunicorn. Here's a breakdown of the Dockerfile:
+
+1. **Base Image:**
+   - `FROM python:3.9.18-slim`: This specifies the base Docker image to use. In this case, it's a slim version of Python 3.9, which is a lightweight base image for running Python applications.
+
+2. **Install Pipenv:**
+   - `RUN pip install pipenv`: This command installs the `pipenv` package, which is a tool for managing Python dependencies and virtual environments.
+
+3. **Set Working Directory:**
+   - `WORKDIR /app`: This sets the working directory within the container to `/app`, where the application code and dependencies will be placed.
+
+4. **Copy Files:**
+   - `COPY ["Pipfile", "Pipfile.lock", "./"]`: This copies the `Pipfile` and `Pipfile.lock` from the host machine into the container's `/app` directory. These files are used to define and lock the Python dependencies for the application.
+   - `COPY ["predict.py", "model_eta=0.1_max_depth=3_v2.48.bin", "./"]`: This copies the Python script `predict.py` and the pre-trained XGBoost model file `model_eta=0.1_max_depth=3_v2.48.bin` into the container's `/app` directory. These are the application code and model needed for making predictions.
+
+5. **Install Dependencies:**
+   - `RUN pipenv install --system --deploy`: This command uses `pipenv` to install the Python dependencies specified in the `Pipfile`. The `--system` flag installs the dependencies globally within the container, and `--deploy` ensures that the locked versions from `Pipfile.lock` are installed.
+
+6. **Expose Port:**
+   - `EXPOSE 9696`: This instruction exposes port 9696 within the container. It doesn't actually publish the port to the host machine but documents that the container will use this port for network communication.
+
+7. **Define Entry Point:**
+   - `ENTRYPOINT ["gunicorn", "--bind=0.0.0.0:9696", "predict:app"]`: This defines the entry point for the container. It specifies that when the container is run, it should start the Gunicorn server with the `predict:app` command. The application will be accessible on port 9696 and bound to all network interfaces (0.0.0.0).
+
+
+To use the Dockerfile we first need to create an image with the command:
+```bash
+docker build -t crab-age .
+```
+and then we can run the container
+```bash
+docker run -it --rm -p 9696:9696 crab-age
+```
+
+It is possible to run the script [predict_test](./code/predict-test.py) to test if the Flask API is working on the container.
+
+```bash
+python predict-test.py
+```
+
+## Cloud Deployment
+
+Google Cloud Run is a serverless platform for deploying containerized applications. It allows you to run applications in lightweight containers without worrying about infrastructure management. To deploy an app using the `gcloud run deploy` command, you'll need to follow these steps:
+
+1. **Set Up Google Cloud SDK:**
+   - Before you can use `gcloud run deploy`, ensure you have the Google Cloud SDK installed and configured. If you haven't already, you can download and set up the SDK by following the instructions here: https://cloud.google.com/sdk/docs/install
+
+2. **Build Your Container Image:**
+   - First, ensure that you have a Docker container image for your application. You can create one using a Dockerfile that defines your app's dependencies and configuration. Make sure the Docker image is pushed to a container registry like Google Container Registry (GCR) or another container registry that Cloud Run can access.
+
+3. **Deploy the App to Google Cloud Run:**
+   - Open a terminal or command prompt.
+   - Navigate to the root directory of your application where the Dockerfile is located.
+   - Run the following `gcloud run deploy` command to deploy your app:
+
+   ```bash
+   gcloud run deploy crab-age --port=9696 --source .
+   ```
+
+4. **Select Region:**
+   - Choose a region where your service will be hosted. Google Cloud Run allows you to select a region where your service will be deployed. Choose the one that is geographically closest to your target audience for lower latency.
+
+5. **Allow Unauthenticated Invocations:**
+   - You will be asked if you want to allow unauthenticated invocations. Choose "y" or "n" based on your application's security requirements.
+
+6. **Deployment Process:**
+   - The `gcloud` command will build and deploy your container to Google Cloud Run. The deployment process may take a few minutes. You'll see progress messages in your terminal.
+
+7. **Access the Service:**
+   - Once the deployment is complete, you'll receive a URL where your service is hosted. You can access your application using this URL.
+```bash
+Service [crab-age] revision [crab-age-00001-yot] has been deployed and is serving 100 percent of traffic.
+Service URL: https://crab-age-234gh2nz6a-rj.a.run.app
+
+python predict-test.py "https://crab-age-234gh2nz6a-rj.a.run.app"
+```
+
+![Cloud Run](./img/ml_zoomcamp_mt1_gif_1.gif)
